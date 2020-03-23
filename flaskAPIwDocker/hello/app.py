@@ -18,7 +18,7 @@ def create_app():
     app = Flask(__name__)
 
     cases = [
-            {  
+            {
                 "country": "Germany",
                 "date": "19.03.2020",
                 "lat": "51",
@@ -27,7 +27,7 @@ def create_app():
                 "active_cases": 11000,
                 "died_cases": 50
             },
-            {  
+            {
                 "country": "Germany",
                 "date": "18.03.2020",
                 "lat": "51",
@@ -36,7 +36,7 @@ def create_app():
                 "active_cases": 11000,
                 "died_cases": 30
             },
-            {  
+            {
                 "country": "France",
                 "date": "19.03.2020",
                 "lat": "46.2276",
@@ -47,7 +47,7 @@ def create_app():
             }
         ]
 
-    """ 
+    """
     mögliche Endpunkte der technischen Schnittstelle (API):
 
     Zahlen:
@@ -95,7 +95,7 @@ def create_app():
             pass
 
         extraction_date = request.args.get('extraction_date')
-        
+
         extraction_date = handle_extraction_date(extraction_date)
 
         date_range = request.args.get('date_range')
@@ -115,19 +115,20 @@ def create_app():
             pass
 
         dbname = os.environ['DB_DATABASE']
-        user = os.environ['DB_USER']
-        password = os.environ['DB_PASSWORD']
-        host = os.environ['DB_HOST']
+        dbuser = os.environ['DB_USER']
+        dbpassword = os.environ['DB_PASSWORD']
+        dbhost = os.environ['DB_HOST']
+        dbport = os.environ['DB_PORT']
 
-        print(dbname, user, password, host)
+        print(dbname, dbuser, dbpassword, dbhost, dbport)
 
-        conn = psycopg2.connect("dbname='wirvsvirus' user='wirvsvirus' host='marc-book.de' password='[n2^3kKCyxUGgzuV'")
+        conn = psycopg2.connect(dbname=dbname, user=dbuser, host=dbhost, port=dbport, password=dbpassword)
         cur = conn.cursor(cursor_factory = psycopg2.extras.RealDictCursor)
 
         ## conn = psycopg2.connect("dbname='{}' user='{}' host='{}'".format(dbname, user, host))
         ## cur = conn.cursor(cursor_factory = psycopg2.extras.RealDictCursor)
 
-        selection = {"extraction_date": extraction_date,"state":state, "province":province, "sex": sex, 
+        selection = {"extraction_date": extraction_date,"state":state, "province":province, "sex": sex,
                     "age_group_start":age_group_start, "age_group_end": age_group_end}
 
         columns = []
@@ -137,13 +138,13 @@ def create_app():
         columns = ", ".join(columns)
         print(columns)
 
-        
+
         selection["date_range_start"] = date_range_start
         selection["date_range_end"] = date_range_end
 
                 ### get the numbers for the end
         cur.execute(""" SELECT {} , sum(case_count) AS infected, sum(death_count) AS deceased
-                        FROM rki_data_germany 
+                        FROM rki_data_germany
                             WHERE (extraction_date = %(extraction_date)s OR %(extraction_date)s IS NULL )
                             AND (state = %(state)s OR %(state)s IS NULL )
                             AND (province = %(province)s OR %(province)s IS NULL)
@@ -151,14 +152,14 @@ def create_app():
                             AND (age_group_start >= %(age_group_start)s OR %(age_group_start)s IS NULL)
                             AND (age_group_end <= %(age_group_end)s OR %(age_group_end)s IS NULL)
                             AND ((notification_date <= %(date_range_end)s) OR %(date_range_end)s IS NULL)
-                            GROUP BY {}""".format(columns, columns), 
+                            GROUP BY {}""".format(columns, columns),
                             selection)
 
         rows_end = cur.fetchall()
 
         ### get the numbers for the start date
         cur.execute(""" SELECT {} , sum(case_count) AS infected, sum(death_count) AS deceased
-                        FROM rki_data_germany 
+                        FROM rki_data_germany
                             WHERE (extraction_date = %(extraction_date)s OR %(extraction_date)s IS NULL )
                             AND (state = %(state)s OR %(state)s IS NULL )
                             AND (province = %(province)s OR %(province)s IS NULL)
@@ -166,13 +167,13 @@ def create_app():
                             AND (age_group_start >= %(age_group_start)s OR %(age_group_start)s IS NULL)
                             AND (age_group_end <= %(age_group_end)s OR %(age_group_end)s IS NULL)
                             AND ((notification_date <= %(date_range_start)s) OR %(date_range_start)s IS NULL)
-                            GROUP BY {}""".format(columns, columns), 
+                            GROUP BY {}""".format(columns, columns),
                             selection)
 
         rows_start = cur.fetchall()
 
         cur.execute(""" SELECT {} , sum(case_count) AS infected, sum(death_count) AS deceased
-                        FROM rki_data_germany 
+                        FROM rki_data_germany
                             WHERE (extraction_date = %(extraction_date)s OR %(extraction_date)s IS NULL )
                             AND (state = %(state)s OR %(state)s IS NULL )
                             AND (province = %(province)s OR %(province)s IS NULL)
@@ -180,7 +181,7 @@ def create_app():
                             AND (age_group_start >= %(age_group_start)s OR %(age_group_start)s IS NULL)
                             AND (age_group_end <= %(age_group_end)s OR %(age_group_end)s IS NULL)
                             AND ((notification_date BETWEEN %(date_range_start)s AND %(date_range_end)s) OR %(date_range_start)s IS NULL)
-                            GROUP BY {}""".format(columns, columns), 
+                            GROUP BY {}""".format(columns, columns),
                             selection)
 
         rows = cur.fetchall()
@@ -238,7 +239,7 @@ def create_app():
         conn = psycopg2.connect("dbname='wirvsvirus' user='wirvsvirus' host='marc-book.de' password='[n2^3kKCyxUGgzuV'")
         cur = conn.cursor(cursor_factory = psycopg2.extras.RealDictCursor)
 
-        selection = {"extraction_date": extraction_date,"state":state, "province":province, "sex": sex, 
+        selection = {"extraction_date": extraction_date,"state":state, "province":province, "sex": sex,
                     "age_group_start":age_group_start, "age_group_end": age_group_end}
 
         columns = []
@@ -246,13 +247,13 @@ def create_app():
             columns.append(key)
         columns = ", ".join(columns)
         print(columns)
-        
+
         selection["date_range_start"] = date_range_start
         selection["date_range_end"] = date_range_end
 
         print(selection)
         cur.execute(""" SELECT {} ,notification_date AS reported, case_count AS infected, death_count AS deceased
-                        FROM rki_data_germany 
+                        FROM rki_data_germany
                             WHERE (extraction_date = %(extraction_date)s OR %(extraction_date)s IS NULL )
                             AND (state = %(state)s OR %(state)s IS NULL )
                             AND (province = %(province)s OR %(province)s IS NULL)
@@ -260,7 +261,7 @@ def create_app():
                             AND (age_group_start >= %(age_group_start)s OR %(age_group_start)s IS NULL)
                             AND (age_group_end <= %(age_group_end)s OR %(age_group_end)s IS NULL)
                             AND ((notification_date BETWEEN %(date_range_start)s AND %(date_range_end)s) OR %(date_range_start)s IS NULL)
-                            """.format(columns, columns), 
+                            """.format(columns, columns),
                             selection)
 
         rows = cur.fetchall()
@@ -298,7 +299,7 @@ def create_app():
                             WHERE (extraction_date = %(extraction_date)s OR %(extraction_date)s IS NULL )
                             AND (referred_date = %(referred_date)s OR %(referred_date)s IS NULL )
                             AND (event_location = %(location)s OR %(location)s IS NULL)
-                            """, 
+                            """,
                             selection)
 
         rows = cur.fetchall()
@@ -319,5 +320,5 @@ def create_app():
             date = "2020-03-21"
             print("set extraction date to yesterday: " + str(date))
             return date
-    
+
     return app
