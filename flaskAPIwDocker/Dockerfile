@@ -14,4 +14,8 @@ COPY . .
 
 LABEL maintainer="Max Dargatz <max.dargatz@de.ibm.com>"
 
+# set port for CF deployment
+ENV PORT 5000
+EXPOSE 5000
+
 CMD gunicorn -c gunicorn.py "hello.app:create_app()"
